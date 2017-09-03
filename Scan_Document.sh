@@ -1,37 +1,36 @@
 #!/bin/bash
 
-#Clear out any old scanned images
-
 
 MakePDF () {
 
-     echo "PDF fuction started"
-
-     #Get the document name, which would have been passed to this function.
+     #Get the document name and page number, which would have been passed to this function.
      documentName=$1
      Number_of_Files=$2
 
-     echo $documentName
-     echo $Number_of_Files
-     
+     # The directory where I've chosen to store the image fles
      directory='/home/pi/Documents/'
 
-     #holds each file path for each image file
+     # Will hold the file locations (the file path) and the file names as a string
      files=''
 
+     # The first file name will always end in a zero
      i=0
-     echo $i
      while [ $i -lt $Number_of_Files ]
      do
-          files=$files$directory$documentName$i$'.ppm ' 
-          echo $files 
+          # After the 1st iteration of loop, files will hold "/home/pi/Documents/FileName0.ppm " followed by a space
+	  # the space is used as seperator for successive file paths
+	  # After 2nd iteration of loop, files will hold "/home/pi/Documents/FileName0.ppm /home/pi/Documents/FileName1.ppm "
+	  # And so on . . . 
+	  files=$files$directory$documentName$i$'.ppm '
+	  
+	  # increment page number
           i=$[$i+1]
      done
-     echo "The file string"
-     echo $files
-     #trim that blank space that was left at the end of the string
+
+     #trim that blank space that was left at the end of the last string
      files=${files::-1}
 
+     #Make a multipage pdf document from our images
      convert -density 300 $files -compress JPEG $documentName$'.pdf'
  
      #Delete all the scanned images
@@ -44,14 +43,16 @@ MakePDF () {
 Scanpage () {
      echo "Running sane software..."
      
-     #Combine the document name with the page number ($1 is the document name, where $2 is the page number)
+     # Combine the document name with the page number ($1 is the document name, where $2 is the page number)
+     # $1 and $2 are the function parameters
      documentName=$1$2
 
+     # Note if the page being scanned is the 1st page, it will have a page number of ZERO
 
      #Next: Take the document name, File extension, and directory path as a string. Aftwards Convert the strings to the appropriate file paths below
-     
      directory='/home/pi/Documents/'
 
+     #Will hold file path, document name followed by the page number
      picture_filepath=$directory$documentName$'.ppm'
 
      #Scan the document
@@ -72,7 +73,7 @@ DocName=$(whiptail --title "Scan Document" --inputbox "Please name the document.
 #Replace any spaces in the document name with an underscore
 DocName=${DocName// /_}
 
- 
+#Bring up Document name dialog box 
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
     echo "The name of your document is:" $DocName
@@ -89,25 +90,26 @@ if [ $exitstatus = 0 ]; then
        #Do we want to scan another page: If no, make pdf and then exit program, If yes Scan another page
        if (whiptail --title "Scan another page?" --yes-button "Yes" --no-button "No"  --yesno "If yes, Insert a new page, and select Yes" 10 60) then
     	     echo "Yes"
+	     
 	     #Scan Document code here, and then tally the scan
              Scanpage $DocName $ScanTally
 
-             #tally
+             #tally (Increment page number)
              ((ScanTally++))
         
         else
              echo "No"
 	     #Since the User doesn't want to scan more pages
 
-             #Generate PDF from scanned images
-       
+             #Generate PDF from scanned image
              MakePDF $DocName $ScanTally
 
+             #exit the script
              exit
         fi
     done
 else
-    echo "You chose Cancel."
+    echo "You chose Cancel." 
     exit
 fi
 
