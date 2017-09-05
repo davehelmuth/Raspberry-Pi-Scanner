@@ -70,12 +70,14 @@ ScanTally=0
 #Get the name of the document
 DocName=$(whiptail --title "Scan Document" --inputbox "Please name the document." 10 60 Scanned_Page 3>&1 1>&2 2>&3)
 
-#Replace any spaces in the document name with an underscore
-DocName=${DocName// /_}
 
 #Bring up Document name dialog box 
 exitstatus=$?
 if [ $exitstatus = 0 ]; then
+    
+    #Replace any spaces in the document name with an underscore
+    DocName=${DocName// /_}
+    
     echo "The name of your document is:" $DocName
 
     #Scan Document code here (Run the function Scanpage)
